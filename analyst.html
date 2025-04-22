@@ -4,47 +4,103 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Analyst’s Copilot</title>
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.4.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #e2e8f0, #ffffff);
+      font-family: 'Inter', sans-serif;
+    }
+    .card-main {
+      width: 100%;
+      max-width: 500px;
+      border: none;
+      border-radius: 1rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .card-header {
+      background-color: #007bff;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .card-header h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      color: #fff;
+      font-weight: 600;
+    }
+    .card-body {
+      padding: 1.5rem;
+    }
+    .form-control,
+    .btn {
+      height: 3rem;
+      border-radius: 0.75rem;
+    }
+    .btn {
+      font-weight: 600;
+    }
+    #result-card {
+      margin-top: 1rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+  </style>
 </head>
-<body class="bg-light">
-  <div class="container py-5">
-    <h1 class="mb-4 text-center">Analyst’s Copilot</h1>
-    <div class="input-group mb-3">
-      <input type="text" id="companyInput" class="form-control" placeholder="Enter company ticker or name" aria-label="Company">
-      <button class="btn btn-primary" id="fetchBtn">Get Summary</button>
+<body>
+  <div class="card card-main">
+    <div class="card-header">
+      <h1>Analyst’s Copilot</h1>
     </div>
-    <div id="result" class="card d-none">
-      <div class="card-body" id="summaryContent"></div>
+    <div class="card-body">
+      <div class="d-flex gap-2">
+        <input type="text" id="companyInput" class="form-control flex-grow-1" placeholder="Enter ticker or company name">
+        <button id="fetchBtn" class="btn btn-primary">Go</button>
+      </div>
+      <div id="result-card" class="card d-none">
+        <div class="card-body" id="summaryContent"></div>
+      </div>
     </div>
   </div>
 
   <script>
-    document.getElementById('fetchBtn').addEventListener('click', async () => {
-      const company = document.getElementById('companyInput').value.trim();
+    const btn = document.getElementById('fetchBtn');
+    const input = document.getElementById('companyInput');
+    const resultCard = document.getElementById('result-card');
+    const summaryContent = document.getElementById('summaryContent');
+
+    btn.addEventListener('click', async () => {
+      const company = input.value.trim();
       if (!company) return;
-      const btn = document.getElementById('fetchBtn');
       btn.disabled = true;
-      btn.textContent = 'Loading...';
-      const resultCard = document.getElementById('result');
-      const content = document.getElementById('summaryContent');
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
       resultCard.classList.add('d-none');
       try {
-        const response = await fetch('/api/summary?company=' + encodeURIComponent(company));
-        if (!response.ok) throw new Error('Failed to fetch summary');
-        const data = await response.json();
-        content.textContent = data.summary;
+        const res = await fetch(`/api/summary?company=${encodeURIComponent(company)}`);
+        if (!res.ok) throw new Error('Fetch failed');
+        const { summary } = await res.json();
+        summaryContent.textContent = summary;
         resultCard.classList.remove('d-none');
-      } catch (err) {
-        content.textContent = err.message;
+      } catch (e) {
+        summaryContent.textContent = e.message;
         resultCard.classList.remove('d-none');
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Get Summary';
+        btn.textContent = 'Go';
       }
     });
+
+    input.addEventListener('keypress', e => { if (e.key === 'Enter') btn.click(); });
   </script>
-  <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.4.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
